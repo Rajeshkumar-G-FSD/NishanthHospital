@@ -1,11 +1,61 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarRange, Award, Star, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { gsap } from 'gsap';
+import { SplitText as GSAPSplitText } from 'gsap/SplitText';
+import { useGSAP } from '@gsap/react';
 
 // Custom lightweight cn implementation for styling merges
 const cn = (...classes: (string | undefined | null | boolean)[]) => {
   return classes.filter(Boolean).join(' ');
 };
+
+interface AnimatedBioProps {
+  text: string;
+}
+
+function AnimatedBio({ text }: AnimatedBioProps) {
+  const containerRef = React.useRef<HTMLParagraphElement>(null);
+
+  useGSAP(() => {
+    if (!containerRef.current) return;
+
+    // Reset components & build high fashion custom character wrapper
+    const split = new GSAPSplitText(containerRef.current, {
+      type: 'words,chars',
+      charsClass: 'inline-block opacity-0'
+    });
+
+    // Animate letters using a beautiful staggered fade-slide transition
+    gsap.fromTo(
+      split.chars,
+      {
+        opacity: 0,
+        y: 6,
+      },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.4,
+        stagger: 0.007,
+        ease: 'power3.out',
+      }
+    );
+
+    return () => {
+      split.revert();
+    };
+  }, [text]);
+
+  return (
+    <p
+      ref={containerRef}
+      className="text-slate-300 text-xs sm:text-sm leading-relaxed font-sans font-medium"
+    >
+      {text}
+    </p>
+  );
+}
 
 export interface TeamMember {
   id: string;
@@ -70,6 +120,8 @@ export interface TeamCarouselProps {
   onMemberChange?: (member: TeamMember, index: number) => void;
   /** Callback when card is clicked */
   onCardClick?: (member: TeamMember, index: number) => void;
+  /** Trigger callback when booking direct consult is requested */
+  onBookClick?: (doctorName: string) => void;
   /** Initial active index */
   initialIndex?: number;
 }
@@ -102,6 +154,7 @@ export const TeamCarousel: React.FC<TeamCarouselProps> = ({
   infoBackground = "transparent",
   onMemberChange,
   onCardClick,
+  onBookClick,
   initialIndex = 0,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -415,34 +468,83 @@ export const TeamCarousel: React.FC<TeamCarouselProps> = ({
         </div>
       </div>
 
-      {/* Member Info (Bottom) */}
+      {/* Member Info (Bottom Redesigned with Elite Card Representation) */}
       {infoPosition === 'bottom' && members[currentIndex] && (
         <motion.div
           key={members[currentIndex].id + "-info"}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="text-center mt-10 px-6 max-w-xl"
+          exit={{ opacity: 0, y: -25 }}
+          transition={{ type: "spring", stiffness: 100, damping: 20 }}
+          className="w-full max-w-2xl px-6 mt-12 z-20"
+          id="active-doctor-profile-panel"
         >
-          <h2
-            className="text-3xl font-bold mb-3 relative inline-block text-white"
-          >
-            {members[currentIndex].name}
-            <span
-              className="absolute top-full left-0 w-full h-[2px] mt-2 bg-rose-500"
-            />
-          </h2>
-          <p
-            className="text-lg font-medium uppercase tracking-wider text-amber-400 mt-2"
-          >
-            {members[currentIndex].role}
-          </p>
-          {members[currentIndex].bio && (
-            <p className="text-sm mt-4 text-slate-300 leading-relaxed font-sans font-medium">
-              {members[currentIndex].bio}
-            </p>
-          )}
+          <div className="bg-slate-900/60 backdrop-blur-3xl border border-white/10 rounded-3xl p-6 sm:p-8 relative shadow-2xl overflow-hidden group">
+            
+            {/* Ambient visual background glow matching the status */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full filter blur-2xl pointer-events-none transition-all duration-700 group-hover:bg-rose-500/15" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-500/5 rounded-full filter blur-2xl pointer-events-none transition-all duration-700" />
+
+            {/* Top Badge Indicators Row */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-sans font-black uppercase tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                <Shield className="w-3 h-3 fill-rose-400/10" />
+                Senior Specialist Consultant
+              </span>
+
+              {members[currentIndex].bio?.toLowerCase().includes('gold medalist') && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-sans font-black uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  <Award className="w-3 h-3 text-amber-500" />
+                  Gold Medalist
+                </span>
+              )}
+
+              {members[currentIndex].bio?.toLowerCase().includes('madras medical college') && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-sans font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                  <Star className="w-3 h-3 fill-indigo-400/15" />
+                  MMC Alumnus
+                </span>
+              )}
+            </div>
+
+            {/* Doctor Identity Blocks */}
+            <div className="space-y-2 text-center sm:text-left">
+              <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2.5">
+                {members[currentIndex].name}
+              </h3>
+              <p className="font-sans font-semibold text-sm sm:text-base text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-200 to-rose-400 uppercase tracking-wider">
+                {members[currentIndex].role}
+              </p>
+            </div>
+
+            {/* Biography body with elite GSAP SplitText character animations */}
+            <div className="mt-5 border-t border-white/5 pt-5 text-center sm:text-left min-h-[72px]">
+              {members[currentIndex].bio && (
+                <AnimatedBio text={members[currentIndex].bio!} />
+              )}
+            </div>
+
+            {/* Quick Action consult layout button */}
+            {onBookClick && (
+              <div className="mt-6 pt-5 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <span className="text-[10px] text-slate-500 font-sans font-semibold uppercase tracking-wider">
+                  24x7 Emergency Obstetric Care Available
+                </span>
+                
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => onBookClick(members[currentIndex].name)}
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-gradient-to-r from-rose-500 to-amber-500 text-white text-[11px] sm:text-xs font-sans font-black tracking-widest uppercase shadow-xl hover:opacity-95 cursor-pointer flex items-center justify-center gap-2 group-hover:shadow-rose-500/10 transition-all"
+                  id={`consult-panel-book-${members[currentIndex].id}`}
+                >
+                  <CalendarRange className="w-3.5 h-3.5" />
+                  <span>Book Consult with {members[currentIndex].name.split(' ')[1] || 'Doctor'}</span>
+                </motion.button>
+              </div>
+            )}
+
+          </div>
         </motion.div>
       )}
 

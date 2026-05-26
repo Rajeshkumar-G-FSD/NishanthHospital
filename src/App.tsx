@@ -7,51 +7,80 @@ import AboutView from './components/AboutView';
 import WhyChooseView from './components/WhyChooseView';
 import MagizhView from './components/MagizhView';
 import ContactSection from './components/ContactSection';
+import DoctorPortal from './components/DoctorPortal';
 
 const TEAM_MEMBERS: TeamMember[] = [
   {
     id: '1',
-    name: 'Dr. Abhishant',
-    role: 'Chief Medical Director & Senior Pediatrician',
-    image: 'https://i.postimg.cc/G9wkSrxf/Dr-Abhishant.avif',
-    bio: 'An expert in medical administration and comprehensive pediatric wellness with a rich background of clinical leadership.',
+    name: 'Dr. Sumathi Padmanaban',
+    role: 'Gold Medalist in Obstetrics & Gynaecology',
+    image: 'https://i.postimg.cc/CMZXtN4z/Dr-Sumathi.avif',
+    bio: 'Dr. Sumathi Padmanaban, a Gold Medalist in Obstetrics & Gynaecology, leads a dedicated team with over 30 years of experience in Erode. Specializing in normal and painless deliveries, her team is available 24x7 for emergency obstetric care at Nishanth Hospital.',
   },
   {
     id: '2',
     name: 'Dr. Padmanaban',
-    role: 'Senior Obstetrician & Gynecologist',
+    role: 'Consultant Anesthesiologist & Managing Director',
     image: 'https://i.postimg.cc/XXSwD3kt/Dr-Padmanaban.avif',
-    bio: 'Renowned expert in high-risk maternity care and advanced minimally invasive gynecological surgical treatments.',
+    bio: 'A distinguished anesthesiologist with over 30 years of experience, Dr. Padmanaban completed his post graduate training at the renowned Manipal Medical College. He has a special interest in obstetric anesthesia, particularly epidural anesthesia for painless labor, ensuring safe and comfortable child birth experiences.',
   },
   {
     id: '3',
-    name: 'Dr. Sumathi',
-    role: 'Senior Gynaecologic Surgeon',
-    image: 'https://i.postimg.cc/CMZXtN4z/Dr-Sumathi.avif',
-    bio: 'Dedicated practitioner specializing in comprehensive female healthcare, reproductive wellness, and aesthetic gynecological therapies.',
+    name: 'Dr. Abhishant Padmanaban',
+    role: 'Consultant Urologist & Andrologist',
+    image: 'https://i.postimg.cc/G9wkSrxf/Dr-Abhishant.avif',
+    bio: 'An alumnus of the prestigious Madras Medical College and a Double Gold Medalist (UG & PG), Dr. Abhishant holds a fellowship in andrology. He specializes in laser urology and microscopic male infertility procedures, offering advanced care for men’s reproductive and urological health.',
   },
   {
     id: '4',
-    name: 'Dr. Srthi',
-    role: 'Specialist in Maternal-Fetal Medicine',
+    name: 'Dr. Sruthi Abhishant',
+    role: 'Fertility Specialist',
     image: 'https://i.postimg.cc/SQX35rGQ/Dr-Srthi.avif',
-    bio: 'Dedicated to advanced fetal scanning, prenatal diagnosis, and supportive family counseling protocols.',
+    bio: 'Dr. Sruthi Abhishant, MBBS, MS, DNB (OBG), FRM, is an academic topper and dedicated Fertility Specialist trained at the prestigious Madras Medical College. Known for her clinical expertise, she leads fertility services at Nishanth Hospital, Erode, guiding women through every stage of their reproductive journey.',
   },
   {
     id: '5',
     name: 'Dr. Anbarasan',
-    role: 'Consultant Neonatologist & Pediatric Specialist',
+    role: 'Consultant Paediatrician & Neonatologist',
     image: 'https://i.postimg.cc/QVGpnsJR/Dr-Anbarasan.avif',
-    bio: 'Provides stellar level IV neonatal protection, tracking infant milestones, and critical care management for preterm newborns.',
+    bio: 'An alumnus of the prestigious Madras Medical College, Dr. Anbarasan brings expert, evidence-based care to newborns and children, with a focus on supporting both the child and family through every stage of development.',
+  },
+  {
+    id: '6',
+    name: 'Dr. Sowbharnika C.P',
+    role: 'Consultant Obstetrician',
+    image: 'https://i.postimg.cc/Qx3pWxPq/Dr-sowbarnika.avif',
+    bio: 'An academic topper and graduate of Coimbatore Medical College, Dr. Sowbharnika is a compassionate obstetrician, dedicated to safe pregnancies and personalized birthing experiences, with a strong focus on antenatal care and maternal wellness.',
+  },
+  {
+    id: '7',
+    name: 'Dr. Kokilavani',
+    role: 'Consultant Obstetrician & Gynecologist',
+    image: 'https://i.postimg.cc/wTphsTPc/Dr-gokila.avif',
+    bio: 'With 10 years of expertise in high-risk obstetrics, Dr. Kokilavani is a dedicated specialist committed to ensuring safe pregnancies and personalized care. An alumnus of Thoothukudi and Thanjavur Medical Colleges, she brings extensive experience in managing complex maternal health cases with a focus on maternal and fetal well-being.',
+  },
+  {
+    id: '8',
+    name: 'Dr. Guha Preetha',
+    role: 'Consultant Fetal Medicine Specialist',
+    image: 'https://i.postimg.cc/yYHFSY5P/Dr-Guha-Preetha.avif',
+    bio: 'Trained at CIMAR and having worked in one of the leading centers of excellence in fetal medicine, Dr. Guha Preetha is an expert in targeted fetal scans, prenatal screening, and genetic evaluations, ensuring early and accurate insights for optimal pregnancy care.',
   }
 ];
 
 export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'about' | 'why-choose' | 'magizh' | 'contact'>('home');
+  const [selectedDoctor, setSelectedDoctor] = useState<string | undefined>(undefined);
+  const [currentView, setCurrentView] = useState<'home' | 'about' | 'why-choose' | 'magizh' | 'contact' | 'doctor'>('home');
 
-  const handleOpenModal = () => setIsModalOpen(true);
-  const handleCloseModal = () => setIsModalOpen(false);
+  const handleOpenModal = (doctor?: any) => {
+    setSelectedDoctor(typeof doctor === 'string' ? doctor : undefined);
+    setIsModalOpen(true);
+  };
+  const handleCloseModal = () => {
+    setSelectedDoctor(undefined);
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="relative min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-rose-500/25 selection:text-rose-200" id="maternity-app-root">
@@ -91,6 +120,7 @@ export default function App() {
               autoPlay={5000}
               grayscaleEffect={false}
               className="relative z-20"
+              onBookClick={(doctorName) => handleOpenModal(doctorName)}
             />
 
             <ContactSection />
@@ -101,9 +131,12 @@ export default function App() {
         ) : currentView === 'why-choose' ? (
           /* High-impact clinical stats and trust factor insights showing 30,000+ safe deliveries */
           <WhyChooseView onOpenBooking={handleOpenModal} />
-        ) : (
+        ) : currentView === 'magizh' ? (
           /* Upcoming specialty fertility care block providing hope for aspiring parents */
           <MagizhView onOpenBooking={handleOpenModal} />
+        ) : (
+          /* Real-time clinician dashboard to view live Firestore appointments list */
+          <DoctorPortal />
         )}
       </main>
 
@@ -121,7 +154,7 @@ export default function App() {
       </footer>
 
       {/* Interactivity modal popup for appointment scheduling and intake */}
-      <BookingModal isOpen={isModalOpen} onClose={handleCloseModal} />
+      <BookingModal isOpen={isModalOpen} onClose={handleCloseModal} preselectedDoctor={selectedDoctor} />
       
     </div>
   );

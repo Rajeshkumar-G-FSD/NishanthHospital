@@ -15,9 +15,13 @@
     "moduleDetection": "force",
     "allowJs": true,
     "jsx": "react-jsx",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "gsap/SplitText": [
+        "src/shims/gsap-splittext.ts"
       ]
     },
     "allowImportingTsExtensions": true,

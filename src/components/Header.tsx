@@ -1,13 +1,76 @@
-import { Heart, Phone, Sparkles, Activity, Baby, MapPin } from 'lucide-react';
-import { motion } from 'motion/react';
+import { useState, useRef, useEffect } from 'react';
+import { Heart, Phone, Sparkles, Activity, Baby, MapPin, ChevronDown, Menu as MenuIcon, X, ClipboardList } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface HeaderProps {
   onContactClick: () => void;
-  currentView: 'home' | 'about' | 'why-choose' | 'magizh' | 'contact';
-  onViewChange: (view: 'home' | 'about' | 'why-choose' | 'magizh' | 'contact') => void;
+  currentView: 'home' | 'about' | 'why-choose' | 'magizh' | 'contact' | 'doctor';
+  onViewChange: (view: 'home' | 'about' | 'why-choose' | 'magizh' | 'contact' | 'doctor') => void;
 }
 
+const MENU_ITEMS = [
+  { 
+    id: 'home', 
+    label: 'Home', 
+    desc: 'Sequence play walk & core doctors', 
+    icon: Heart, 
+    accent: 'text-rose-400 bg-rose-500/10' 
+  },
+  { 
+    id: 'about', 
+    label: 'About Us', 
+    desc: '25 years of excellence & standards', 
+    icon: Sparkles, 
+    accent: 'text-amber-400 bg-amber-500/10' 
+  },
+  { 
+    id: 'why-choose', 
+    label: 'Why Choose Us', 
+    desc: '30,000+ safe deliveries & stats care', 
+    icon: Activity, 
+    accent: 'text-emerald-400 bg-emerald-500/10' 
+  },
+  { 
+    id: 'magizh', 
+    label: 'மகிழ் Care', 
+    desc: 'Hope for aspiring parent families', 
+    icon: Baby, 
+    accent: 'text-rose-400 bg-rose-500/10' 
+  },
+  { 
+    id: 'contact', 
+    label: 'Contact Us', 
+    desc: 'EM EVN road, phone hotlines & branch', 
+    icon: MapPin, 
+    accent: 'text-pink-400 bg-pink-500/10' 
+  },
+  { 
+    id: 'doctor', 
+    label: 'Doctor Portal', 
+    desc: 'Authorized clinical intake analytics', 
+    icon: ClipboardList, 
+    accent: 'text-sky-400 bg-sky-500/10' 
+  }
+] as const;
+
 export default function Header({ onContactClick, currentView, onViewChange }: HeaderProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const activeItem = MENU_ITEMS.find((item) => item.id === currentView) || MENU_ITEMS[0];
+  const ActiveIcon = activeItem.icon;
+
   return (
     <motion.header 
       id="main-nav-header"
@@ -18,7 +81,10 @@ export default function Header({ onContactClick, currentView, onViewChange }: He
     >
       {/* Brand Logo - Clicking resets to Home */}
       <div 
-        onClick={() => onViewChange('home')}
+        onClick={() => {
+          onViewChange('home');
+          setIsMenuOpen(false);
+        }}
         className="flex items-center space-x-3 group cursor-pointer" 
         id="logo-container"
       >
@@ -32,117 +98,105 @@ export default function Header({ onContactClick, currentView, onViewChange }: He
         />
       </div>
 
-      {/* Main Navigation Menu Tabs */}
-      <div className="flex items-center space-x-1 sm:space-x-2 bg-slate-900/60 p-1 rounded-full border border-white/5" id="nav-tabs-container">
+      {/* Main Interactive Dropdown Navigation Pill */}
+      <div className="relative" ref={menuRef} id="nav-dropdown-menu-wrapper">
         <button
-          onClick={() => onViewChange('home')}
-          className={`px-2.5 md:px-4 py-1.5 rounded-full text-xs md:text-sm font-sans font-semibold transition-all duration-300 relative cursor-pointer ${
-            currentView === 'home' 
-              ? 'text-white' 
-              : 'text-slate-400 hover:text-slate-200'
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className={`flex items-center space-x-2 md:space-x-3 px-4 md:px-5 py-2 md:py-2.5 rounded-full border bg-slate-900/90 text-slate-200 hover:text-white transition-all font-sans font-bold text-xs md:text-sm shadow-xl backdrop-blur-md cursor-pointer select-none ${
+            isMenuOpen 
+              ? 'border-rose-500/40 shadow-rose-500/5 text-white' 
+              : 'border-white/5 hover:border-white/15'
           }`}
-          id="nav-tab-home"
+          id="nav-menu-trigger"
         >
-          {currentView === 'home' && (
-            <motion.span 
-              layoutId="active-tab"
-              className="absolute inset-0 bg-gradient-to-r from-rose-500/20 to-rose-600/30 border border-rose-500/30 rounded-full"
-              transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            />
+          {isMenuOpen ? (
+            <X className="w-4 h-4 text-rose-400 shrink-0" />
+          ) : (
+            <MenuIcon className="w-4 h-4 text-slate-400 shrink-0" />
           )}
-          <span className="relative z-10 flex items-center gap-1.5">
-            <Heart className={`w-3.5 h-3.5 ${currentView === 'home' ? 'text-rose-500 fill-rose-500/20' : 'text-slate-400'}`} />
-            Home
-          </span>
+          
+          <div className="flex items-center space-x-1.5 border-l border-white/10 pl-2">
+            <ActiveIcon className="w-3.5 h-3.5 text-rose-400 shrink-0 fill-rose-400/5" />
+            <span className="hidden xs:inline text-[11px] uppercase tracking-wider text-slate-400">Nav:</span>
+            <span className="text-white">{activeItem.label}</span>
+          </div>
+
+          <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 text-slate-400 shrink-0 ${isMenuOpen ? 'rotate-180 text-rose-400' : ''}`} />
         </button>
 
-        <button
-          onClick={() => onViewChange('about')}
-          className={`px-2.5 md:px-4 py-1.5 rounded-full text-xs md:text-sm font-sans font-semibold transition-all duration-300 relative cursor-pointer ${
-            currentView === 'about' 
-              ? 'text-white' 
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-          id="nav-tab-about"
-        >
-          {currentView === 'about' && (
-            <motion.span 
-              layoutId="active-tab"
-              className="absolute inset-0 bg-gradient-to-r from-rose-500/20 to-rose-600/30 border border-rose-500/30 rounded-full"
-              transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            />
-          )}
-          <span className="relative z-10 flex items-center gap-1.5">
-            <Sparkles className={`w-3.5 h-3.5 ${currentView === 'about' ? 'text-amber-400 fill-amber-300/10' : 'text-slate-400'}`} />
-            About Us
-          </span>
-        </button>
+        {/* Floating Stagger Menu Panel */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 12, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.95 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="absolute top-14 left-1/2 -translate-x-1/2 w-72 sm:w-80 bg-slate-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 shadow-2xl z-50 flex flex-col gap-1 overflow-hidden"
+              id="nav-menu-dropdown-layer"
+            >
+              {/* Optional dynamic atmospheric glow inside menu */}
+              <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 rounded-full filter blur-xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-500/5 rounded-full filter blur-xl pointer-events-none" />
 
-        <button
-          onClick={() => onViewChange('why-choose')}
-          className={`px-2.5 md:px-4 py-1.5 rounded-full text-xs md:text-sm font-sans font-semibold transition-all duration-300 relative cursor-pointer ${
-            currentView === 'why-choose' 
-              ? 'text-white' 
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-          id="nav-tab-why-choose"
-        >
-          {currentView === 'why-choose' && (
-            <motion.span 
-              layoutId="active-tab"
-              className="absolute inset-0 bg-gradient-to-r from-rose-500/20 to-rose-600/30 border border-rose-500/30 rounded-full"
-              transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            />
-          )}
-          <span className="relative z-10 flex items-center gap-1.5">
-            <Activity className={`w-3.5 h-3.5 ${currentView === 'why-choose' ? 'text-emerald-400 fill-emerald-300/10' : 'text-slate-400'}`} />
-            Why Choose
-          </span>
-        </button>
+              <div className="px-3 py-1.5 border-b border-white/5 mb-1 text-[10px] font-bold tracking-widest text-slate-500 uppercase font-sans select-none">
+                Hospital Portal Options
+              </div>
 
-        <button
-          onClick={() => onViewChange('magizh')}
-          className={`px-2.5 md:px-4 py-1.5 rounded-full text-xs md:text-sm font-sans font-semibold transition-all duration-300 relative cursor-pointer ${
-            currentView === 'magizh' 
-              ? 'text-white' 
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-          id="nav-tab-magizh"
-        >
-          {currentView === 'magizh' && (
-            <motion.span 
-              layoutId="active-tab"
-              className="absolute inset-0 bg-gradient-to-r from-rose-500/20 to-rose-600/30 border border-rose-500/30 rounded-full"
-              transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            />
-          )}
-          <span className="relative z-10 flex items-center gap-1.5">
-            <Baby className={`w-3.5 h-3.5 ${currentView === 'magizh' ? 'text-rose-400 fill-rose-300/10' : 'text-slate-400'}`} />
-            மகிழ்
-          </span>
-        </button>
+              {MENU_ITEMS.map((item, idx) => {
+                const ItemIcon = item.icon;
+                const isSelected = item.id === currentView;
+                return (
+                  <motion.button
+                    key={item.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.04 * idx }}
+                    onClick={() => {
+                      onViewChange(item.id);
+                      setIsMenuOpen(false);
+                    }}
+                    className={`group w-full text-left flex items-start gap-3 p-2.5 rounded-xl transition-all duration-300 relative cursor-pointer ${
+                      isSelected 
+                        ? 'bg-slate-900 border border-white/10' 
+                        : 'hover:bg-slate-900/60 border border-transparent'
+                    }`}
+                    id={`menu-item-${item.id}`}
+                  >
+                    {/* Animated side-bar active indicator inside items */}
+                    {isSelected && (
+                      <motion.div 
+                        layoutId="active-nav-bullet"
+                        className="absolute left-1 top-3 bottom-3 w-1 bg-rose-500 rounded-full"
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                      />
+                    )}
 
-        <button
-          onClick={() => onViewChange('contact')}
-          className={`px-2.5 md:px-4 py-1.5 rounded-full text-xs md:text-sm font-sans font-semibold transition-all duration-300 relative cursor-pointer ${
-            currentView === 'contact' 
-              ? 'text-white' 
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-          id="nav-tab-contact"
-        >
-          {currentView === 'contact' && (
-            <motion.span 
-              layoutId="active-tab"
-              className="absolute inset-0 bg-gradient-to-r from-rose-500/20 to-rose-600/30 border border-rose-500/30 rounded-full"
-              transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            />
+                    {/* Left Icon Block */}
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border border-white/5 transition-colors group-hover:border-white/10 ${item.accent}`}>
+                      <ItemIcon className="w-4.5 h-4.5" />
+                    </div>
+
+                    {/* Label & Description block */}
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`font-sans font-bold text-xs sm:text-sm ${isSelected ? 'text-white' : 'text-slate-200 group-hover:text-white'}`}>
+                          {item.label}
+                        </span>
+                        {isSelected && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                        )}
+                      </div>
+                      <span className="block text-[11px] text-slate-500 group-hover:text-slate-400 font-medium font-sans leading-tight transition-colors">
+                        {item.desc}
+                      </span>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </motion.div>
           )}
-          <span className="relative z-10 flex items-center gap-1.5">
-            <MapPin className={`w-3.5 h-3.5 ${currentView === 'contact' ? 'text-rose-400' : 'text-slate-400'}`} />
-            Contact
-          </span>
-        </button>
+        </AnimatePresence>
       </div>
 
       {/* Quick Action Contact Button */}

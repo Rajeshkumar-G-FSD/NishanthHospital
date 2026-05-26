@@ -9,6 +9,7 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        'gsap/SplitText': path.resolve(__dirname, 'src/shims/gsap-splittext.ts'),
       },
     },
     server: {

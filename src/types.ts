@@ -1,10 +1,15 @@
 export interface BookingRequest {
-  parentName: string;
-  email: string;
-  phone: string;
-  dueDate: string;
-  careType: 'maternity' | 'postnatal' | 'doula' | 'midwife';
-  notes?: string;
+  name: string;
+  contactNumber: string;
+  secondaryContactNumber: string;
+  guardianPrefix: string;
+  guardianName: string;
+  department: string;
+  doctor: string;
+  date: string;
+  address: string;
+  comments: string;
+  appointmentType?: string; // e.g., 'Physical' or 'Virtual'
 }
 
 export interface CareService {
