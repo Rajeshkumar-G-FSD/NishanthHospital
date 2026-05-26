@@ -12,7 +12,7 @@ export default function Header({ onContactClick }: HeaderProps) {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="absolute top-0 left-0 right-0 z-50 px-6 py-5 md:px-12 flex justify-between items-center bg-transparent backdrop-blur-[2px]"
+      className="fixed top-0 left-0 right-0 z-50 px-6 py-4 md:px-12 flex justify-between items-center bg-slate-950/80 backdrop-blur-md border-b border-white/5"
     >
       {/* Brand Logo */}
       <div className="flex items-center space-x-3 group cursor-pointer" id="logo-container">
@@ -20,6 +20,7 @@ export default function Header({ onContactClick }: HeaderProps) {
           src="https://i.postimg.cc/d1Mjps1w/Nishanth-logo.avif" 
           alt="Brand Logo" 
           className="h-10 md:h-12 w-auto object-contain rounded-lg transition-transform duration-300 group-hover:scale-105"
+          style={{ filter: 'invert(1) hue-rotate(180deg) brightness(1.1)' }}
           referrerPolicy="no-referrer"
           id="brand-logo-image"
         />

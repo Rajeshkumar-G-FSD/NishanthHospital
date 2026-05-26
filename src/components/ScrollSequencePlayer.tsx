@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, HelpCircle, Heart, Star, Sparkles, Calendar, Shield, Activity, RefreshCw } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Heart, Sparkles, Activity } from 'lucide-react';
 
 interface ScrollSequencePlayerProps {
   onOpenBooking: () => void;
@@ -134,16 +134,47 @@ export default function ScrollSequencePlayer({ onOpenBooking }: ScrollSequencePl
     let offsetX = 0;
     let offsetY = 0;
 
-    // Aspect ratio calculation matching background-size: cover
-    if (imgRatio > canvasRatio) {
-      drawWidth = canvasHeight * imgRatio;
-      offsetX = (canvasWidth - drawWidth) / 2;
-    } else {
-      drawHeight = canvasWidth / imgRatio;
-      offsetY = (canvasHeight - drawHeight) / 2;
-    }
+    const isPortrait = canvasWidth < canvasHeight;
 
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+    if (isPortrait) {
+      // 1. Draw heavy-blurred stretched background matching the frame color scheme to fill any gaps beautifully (ambient glow)
+      ctx.save();
+      ctx.filter = 'blur(40px) brightness(0.35)';
+      
+      let bgDrawWidth = canvasWidth;
+      let bgDrawHeight = canvasHeight;
+      let bgOffsetX = 0;
+      let bgOffsetY = 0;
+      
+      if (imgRatio > canvasRatio) {
+        bgDrawWidth = canvasHeight * imgRatio;
+        bgOffsetX = (canvasWidth - bgDrawWidth) / 2;
+      } else {
+        bgDrawHeight = canvasWidth / imgRatio;
+        bgOffsetY = (canvasHeight - bgDrawHeight) / 2;
+      }
+      
+      ctx.drawImage(img, bgOffsetX, bgOffsetY, bgDrawWidth, bgDrawHeight);
+      ctx.restore();
+
+      // 2. Draw pristine, fit-to-width foreground image preserving both mother & baby fully center stage
+      drawWidth = canvasWidth;
+      drawHeight = canvasWidth / imgRatio;
+      offsetX = 0;
+      offsetY = (canvasHeight - drawHeight) / 2;
+    } else {
+      // Standard landscape cover scaling
+      if (imgRatio > canvasRatio) {
+        drawWidth = canvasHeight * imgRatio;
+        offsetX = (canvasWidth - drawWidth) / 2;
+      } else {
+        drawHeight = canvasWidth / imgRatio;
+        offsetY = (canvasHeight - drawHeight) / 2;
+      }
+    }
+
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
   };
 
@@ -191,15 +222,15 @@ export default function ScrollSequencePlayer({ onOpenBooking }: ScrollSequencePl
   const progressPercentage = Math.round((loadedCount / TOTAL_FRAMES) * 100);
 
   return (
-    <div ref={containerRef} className="relative w-full h-[320vh] bg-slate-900" id="scroll-sequence-scroller">
+    <div ref={containerRef} className="relative w-full h-[150vh] md:h-[320vh] bg-slate-950 flex flex-col items-center pt-24 md:pt-0" id="scroll-sequence-scroller">
       
       {/* Sticky screen container to host the visual player */}
-      <div className="sticky top-0 left-0 right-0 h-screen w-full overflow-hidden flex items-center justify-center bg-slate-950">
+      <div className="sticky top-[86px] md:top-0 h-[48vh] sm:h-[60vh] md:h-screen w-[calc(100%-2rem)] md:w-full mx-4 md:mx-0 overflow-hidden flex items-center justify-center bg-slate-900/60 rounded-2xl md:rounded-none border border-white/5 md:border-none shadow-2xl md:shadow-none">
         
         {/* Cinematic dark overlays to balance content readability */}
         <div className="absolute inset-0 bg-radial-gradient(circle at center, rgba(15,23,42,0.1) 0%, rgba(15,23,42,0.5) 100%) z-10 pointer-events-none" />
         <div className="absolute top-0 left-0 right-0 h-32 bg-linear-to-b from-slate-950/80 to-transparent z-15 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 right-56 h-40 bg-linear-to-t from-slate-950/90 via-slate-950/30 to-transparent z-15 pointer-events-none md:block hidden" />
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-linear-to-t from-slate-950/90 via-slate-950/30 to-transparent z-15 pointer-events-none" />
         
         {/* The Animated Canvas Base */}
         <canvas 
@@ -207,8 +238,6 @@ export default function ScrollSequencePlayer({ onOpenBooking }: ScrollSequencePl
           className="absolute inset-0 w-full h-full object-cover text-white filter brightness-95 opacity-85 transition-opacity duration-300 pointer-events-none"
           id="scroll-render-canvas"
         />
-
-
 
         {/* Loading overlay panel for smooth asset boot */}
         {isPreloading && (
@@ -244,77 +273,38 @@ export default function ScrollSequencePlayer({ onOpenBooking }: ScrollSequencePl
           </div>
         )}
 
-        {/* CONTENT PANELS SYNCHRONIZED TO SCROLL MILESTONES */}
-        <div className="absolute inset-0 z-20 flex flex-col justify-center px-6 md:px-12 pointer-events-none">
-          <div className="max-w-7xl mx-auto w-full flex items-center h-full relative">
+        {/* CENTERED HERO TEXT WITH ELEGANT GRADIENS & MODERN TYPOGRAPHY */}
+        <div className="absolute inset-0 z-20 flex items-center justify-center px-6 pointer-events-none">
+          <div className="text-center max-w-3xl flex flex-col items-center space-y-5">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="inline-flex items-center space-x-2 bg-white/5 border border-white/10 text-rose-200 px-3 py-1 rounded-full text-xs font-sans font-semibold tracking-wider uppercase mb-1"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-300" />
+              <span>Nishant Hospital Maternity Care</span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.2, delay: 0.2, ease: "easeOut" }}
+              className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight drop-shadow-lg leading-tight"
+              id="hero-centered-title"
+            >
+              Expert care meets <br className="sm:hidden" />
+              <span className="bg-gradient-to-r from-rose-400 via-amber-300 to-emerald-400 bg-clip-text text-transparent italic font-medium">affordability</span>
+            </motion.h1>
+
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: "80px", opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.8 }}
+              className="h-[2px] bg-gradient-to-r from-rose-400 via-amber-300 to-emerald-400 rounded-full"
+            />
             
-            {/* Left Content column: text messages fade in/out selectively as scroll advances */}
-            <div className="max-w-xl md:max-w-2xl relative flex flex-col justify-center min-h-[50vh] text-left">
-              
-              {/* STAGE A CONTENT (scrollProgress 0% to 33%) */}
-              <AnimatePresence mode="wait">
-                {scrollProgress >= 0 && scrollProgress < 0.33 && (
-                  <motion.div
-                    key="stage-a"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -30 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="absolute inset-0 flex flex-col justify-center pointer-events-auto"
-                  >
-                   
-
-                   
-
-                  
-
-                  
-
-                
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* STAGE B CONTENT (scrollProgress 33% to 66%) */}
-              <AnimatePresence mode="wait">
-                {scrollProgress >= 0.33 && scrollProgress < 0.66 && (
-                  <motion.div
-                    key="stage-b"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -30 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="absolute inset-0 flex flex-col justify-center pointer-events-auto"
-                  >
-                  
-                 
-                   
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* STAGE C CONTENT (scrollProgress 66% to 100%) */}
-              <AnimatePresence mode="wait">
-                {scrollProgress >= 0.66 && (
-                  <motion.div
-                    key="stage-c"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -30 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="absolute inset-0 flex flex-col justify-center pointer-events-auto"
-                  >
-                  
-                  
-
-                    {/* Integrated mini CTA button */}
-                   
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-            </div>
-
+          
           </div>
         </div>
 
