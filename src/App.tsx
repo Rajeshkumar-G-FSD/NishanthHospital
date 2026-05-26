@@ -3,6 +3,10 @@ import Header from './components/Header';
 import BookingModal from './components/BookingModal';
 import ScrollSequencePlayer from './components/ScrollSequencePlayer';
 import TeamCarousel, { TeamMember } from './components/TeamCarousel';
+import AboutView from './components/AboutView';
+import WhyChooseView from './components/WhyChooseView';
+import MagizhView from './components/MagizhView';
+import ContactSection from './components/ContactSection';
 
 const TEAM_MEMBERS: TeamMember[] = [
   {
@@ -44,6 +48,7 @@ const TEAM_MEMBERS: TeamMember[] = [
 
 export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<'home' | 'about' | 'why-choose' | 'magizh' | 'contact'>('home');
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
@@ -51,23 +56,55 @@ export default function App() {
   return (
     <div className="relative min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-rose-500/25 selection:text-rose-200" id="maternity-app-root">
       
-      {/* Main Header Component with navigation actions */}
-      <Header onContactClick={handleOpenModal} />
+      {/* Main Header Component with navigation actions, current view, and view setter */}
+      <Header 
+        onContactClick={handleOpenModal} 
+        currentView={currentView}
+        onViewChange={(view) => {
+          setCurrentView(view);
+          if (view === 'contact') {
+            setTimeout(() => {
+              const el = document.getElementById('contact-section');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 100);
+          } else {
+            // Scroll up so we enter from the top for both views
+            window.scrollTo({ top: 0, behavior: 'instant' as any });
+          }
+        }}
+      />
 
-      {/* Immersive Scroll Sequence Hero Section and Team Carousel */}
+      {/* Dynamic View rendering depending on header click tabs */}
       <main className="w-full grow relative z-10" id="main-content-area">
-        <ScrollSequencePlayer onOpenBooking={handleOpenModal} />
-        
-        {/* High-quality Carousel showing professional maternity, gynecological, and pediatric experts */}
-        <TeamCarousel 
-          members={TEAM_MEMBERS} 
-          title="Meet Our Core Team of Consultants" 
-          titleSize="md"
-          titleColor="rgb(244, 63, 94)"
-          autoPlay={5000}
-          grayscaleEffect={false}
-          className="relative z-20"
-        />
+        {currentView === 'home' || currentView === 'contact' ? (
+          <>
+            {/* Home view containing the immersive sequence walk and core consultants */}
+            <ScrollSequencePlayer onOpenBooking={handleOpenModal} />
+            
+            <TeamCarousel 
+              members={TEAM_MEMBERS} 
+              title="Meet Our Core Team of Consultants" 
+              titleSize="md"
+              titleColor="rgb(244, 63, 94)"
+              autoPlay={5000}
+              grayscaleEffect={false}
+              className="relative z-20"
+            />
+
+            <ContactSection />
+          </>
+        ) : currentView === 'about' ? (
+          /* Robust state AboutUs page presenting 25 years of excellence and specialized hospital insights */
+          <AboutView onOpenBooking={handleOpenModal} />
+        ) : currentView === 'why-choose' ? (
+          /* High-impact clinical stats and trust factor insights showing 30,000+ safe deliveries */
+          <WhyChooseView onOpenBooking={handleOpenModal} />
+        ) : (
+          /* Upcoming specialty fertility care block providing hope for aspiring parents */
+          <MagizhView onOpenBooking={handleOpenModal} />
+        )}
       </main>
 
       {/* Elegant, humble, literal footer */}
