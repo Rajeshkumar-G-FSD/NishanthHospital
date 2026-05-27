@@ -16,7 +16,9 @@ import {
   ShieldAlert,
   Sliders,
   Users,
-  Video
+  Video,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { BookingRequest } from '../types';
 import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -173,22 +175,113 @@ export default function BookingModal({ isOpen, onClose, preselectedDoctor }: Boo
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const dateInputRef = useRef<HTMLInputElement>(null);
+  // Custom premium React Calendar Datepicker state & helpers
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [currentDateView, setCurrentDateView] = useState(() => {
+    // Current date (May 2026 based on metadata)
+    return new Date(2026, 4, 1); // Start with May 2026
+  });
 
-  const triggerDatePicker = (e: React.MouseEvent | React.FocusEvent) => {
-    // Attempt to invoke the modern native browser datepicker (essential to open native iOS/Apple Date Picker immediately on click)
-    if (dateInputRef.current) {
-      try {
-        if ('showPicker' in HTMLInputElement.prototype) {
-          dateInputRef.current.showPicker();
-        } else {
-          dateInputRef.current.focus();
-        }
-      } catch (err) {
-        // Fallback for older browsers
-        dateInputRef.current.focus();
+  const datepickerRef = useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (datepickerRef.current && !datepickerRef.current.contains(event.target as Node)) {
+        setShowDatePicker(false);
       }
     }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const weekdays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+  const getDaysInMonth = (year: number, month: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (year: number, month: number) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  const handlePrevMonth = () => {
+    setCurrentDateView(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() - 1);
+      return newDate;
+    });
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDateView(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() + 1);
+      return newDate;
+    });
+  };
+
+  const handleSelectDate = (day: number) => {
+    const y = currentDateView.getFullYear();
+    const m = String(currentDateView.getMonth() + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    const formattedDate = `${y}-${m}-${d}`;
+    setFormData(prev => ({
+      ...prev,
+      date: formattedDate
+    }));
+    setShowDatePicker(false);
+  };
+
+  const selectToday = () => {
+    const exactToday = new Date(2026, 4, 26); // May 26, 2026 is today
+    const y = exactToday.getFullYear();
+    const m = String(exactToday.getMonth() + 1).padStart(2, '0');
+    const d = String(exactToday.getDate()).padStart(2, '0');
+    setFormData(prev => ({ ...prev, date: `${y}-${m}-${d}` }));
+    setCurrentDateView(new Date(y, exactToday.getMonth(), 1));
+    setShowDatePicker(false);
+  };
+
+  const selectTomorrow = () => {
+    const tomorrow = new Date(2026, 4, 26);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const y = tomorrow.getFullYear();
+    const m = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const d = String(tomorrow.getDate()).padStart(2, '0');
+    setFormData(prev => ({ ...prev, date: `${y}-${m}-${d}` }));
+    setCurrentDateView(new Date(y, tomorrow.getMonth(), 1));
+    setShowDatePicker(false);
+  };
+
+  const isDateBeforeToday = (year: number, month: number, day: number) => {
+    const today = new Date(2026, 4, 26); // May 26, 2026
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(year, month, day);
+    return compareDate < today;
+  };
+
+  const isSelectedDate = (year: number, month: number, day: number) => {
+    if (!formData.date) return false;
+    const [fYear, fMonth, fDay] = formData.date.split('-').map(Number);
+    return fYear === year && fMonth === (month + 1) && fDay === day;
+  };
+
+  const isTodayDate = (year: number, month: number, day: number) => {
+    const today = new Date(2026, 4, 26);
+    return today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+  };
+
+  const formatDateBeautifully = (dateStr: string) => {
+    if (!dateStr) return "";
+    const [year, month, day] = dateStr.split('-');
+    const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+    return dateObj.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -537,50 +630,129 @@ export default function BookingModal({ isOpen, onClose, preselectedDoctor }: Boo
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Datepicker */}
-                      <div>
+                      <div className="relative" ref={datepickerRef}>
                         <label 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            triggerDatePicker(e);
-                          }}
+                          onClick={() => setShowDatePicker(!showDatePicker)}
                           className="block text-[11px] font-sans font-bold text-slate-400 uppercase tracking-widest mb-1.5 cursor-pointer hover:text-rose-400 transition-colors"
                         >
                           Appointment Date *
                         </label>
-                        <div 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            triggerDatePicker(e);
-                          }}
-                          className="relative cursor-pointer group"
+                        <button
+                          type="button"
+                          onClick={() => setShowDatePicker(!showDatePicker)}
+                          className="relative w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-white/5 focus:border-rose-500 text-left text-white text-xs sm:text-sm font-sans font-bold flex items-center justify-between cursor-pointer transition-all hover:border-white/15 min-h-[44px]"
+                          id="custom-date-trigger"
                         >
-                          <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-hover:text-rose-400 transition-colors pointer-events-none" />
-                          <input
-                            ref={dateInputRef}
-                            type="date"
-                            name="date"
-                            value={formData.date}
-                            onChange={handleInputChange}
-                            onClick={(e) => {
-                              // Don't stop normal click behavior from native inputs, let trigger show picker cleanly
-                              try {
-                                if ('showPicker' in HTMLInputElement.prototype) {
-                                  (e.target as HTMLInputElement).showPicker();
-                                }
-                              } catch(err) {}
-                            }}
-                            onFocus={(e) => {
-                              try {
-                                if ('showPicker' in HTMLInputElement.prototype) {
-                                  (e.target as HTMLInputElement).showPicker();
-                                }
-                              } catch(err) {}
-                            }}
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-white/5 focus:border-rose-500 text-white text-xs sm:text-sm font-sans font-bold cursor-pointer transition-all select-none group-hover:border-white/15"
-                            required
-                            id="input-date"
-                          />
-                        </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                            <span>
+                              {formData.date ? formatDateBeautifully(formData.date) : "Select Appointment Date"}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest bg-slate-900 border border-white/10 px-2 py-0.5 rounded-md">
+                            Choose
+                          </span>
+                        </button>
+
+                        <AnimatePresence>
+                          {showDatePicker && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 4, scale: 1 }}
+                              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                              className="absolute left-0 mt-1.5 w-full bg-slate-900 border border-white/10 rounded-2xl shadow-2xl p-4 z-50 select-none max-w-sm"
+                              id="custom-datepicker-dropdown"
+                            >
+                              {/* Quick selection presets */}
+                              <div className="flex items-center gap-1.5 pb-3 border-b border-white/5 mb-3 overflow-x-auto whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={selectToday}
+                                  className="px-2.5 py-1 rounded-full text-[9px] font-sans font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 cursor-pointer transition-colors"
+                                >
+                                  Today (May 26)
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={selectTomorrow}
+                                  className="px-2.5 py-1 rounded-full text-[9px] font-sans font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/10 cursor-pointer transition-colors"
+                                >
+                                  Tomorrow
+                                </button>
+                              </div>
+
+                              {/* Calendar Navigate Month panel */}
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-serif text-xs sm:text-sm font-bold text-white">
+                                  {months[currentDateView.getMonth()]} {currentDateView.getFullYear()}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={handlePrevMonth}
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                                    aria-label="Previous Month"
+                                  >
+                                    <ChevronLeft className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleNextMonth}
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                                    aria-label="Next Month"
+                                  >
+                                    <ChevronRight className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Days of week header */}
+                              <div className="grid grid-cols-7 gap-1 text-center mb-1 text-[10px] font-sans font-black text-slate-500 uppercase tracking-wider">
+                                {weekdays.map(wd => (
+                                  <div key={wd}>{wd}</div>
+                                ))}
+                              </div>
+
+                              {/* Day numbers grid */}
+                              <div className="grid grid-cols-7 gap-1 text-center">
+                                {/* Padding days for the start of the month */}
+                                {Array.from({ length: getFirstDayOfMonth(currentDateView.getFullYear(), currentDateView.getMonth()) }).map((_, idx) => (
+                                  <div key={`empty-${idx}`} className="w-8 h-8" />
+                                ))}
+
+                                {/* Actual month days */}
+                                {Array.from({ length: getDaysInMonth(currentDateView.getFullYear(), currentDateView.getMonth()) }).map((_, idx) => {
+                                  const day = idx + 1;
+                                  const y = currentDateView.getFullYear();
+                                  const m = currentDateView.getMonth();
+                                  const isDisabled = isDateBeforeToday(y, m, day);
+                                  const isSelected = isSelectedDate(y, m, day);
+                                  const isToday = isTodayDate(y, m, day);
+
+                                  return (
+                                    <button
+                                      type="button"
+                                      key={`day-${day}`}
+                                      disabled={isDisabled}
+                                      onClick={() => handleSelectDate(day)}
+                                      className={`w-8 h-8 rounded-full text-xs font-sans font-semibold flex items-center justify-center transition-all ${
+                                        isDisabled 
+                                          ? 'text-slate-650 cursor-not-allowed opacity-30 bg-transparent'
+                                          : isSelected
+                                            ? 'bg-rose-500 text-white font-bold ring-2 ring-rose-400/20'
+                                            : isToday
+                                              ? 'border border-amber-500 text-amber-500 font-bold hover:bg-amber-500/10'
+                                              : 'text-slate-300 hover:bg-white/5 hover:text-white cursor-pointer'
+                                      }`}
+                                    >
+                                      {day}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
 
                       {/* Appointment Type Selection */}

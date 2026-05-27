@@ -118,6 +118,7 @@ export default function DoctorPortal() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDeptFilter, setSelectedDeptFilter] = useState('All');
   const [selectedDoctorFilter, setSelectedDoctorFilter] = useState('All');
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<'All' | 'Physical' | 'Virtual'>('All');
 
   // Interactive Employee roster system states
   const [employees, setEmployees] = useState<Employee[]>([
@@ -177,11 +178,29 @@ export default function DoctorPortal() {
     setIsLoading(true);
     setFetchError('');
     try {
-      const q = query(collection(db, 'appointments'), orderBy('createdAt', 'desc'));
+      // Avoid index query issues in Firestore by querying without orderBy and sorting locally
+      const q = collection(db, 'appointments');
       const querySnapshot = await getDocs(q);
       const records: DirectBookingRecord[] = [];
+      
       querySnapshot.forEach((docSnap) => {
         const data = docSnap.data();
+        
+        // Normalize appointment type to be highly robust and dynamic
+        let finalType = 'Physical';
+        if (data.appointmentType) {
+          const typeLower = data.appointmentType.toString().trim().toLowerCase();
+          if (
+            typeLower.includes('virt') ||
+            typeLower.includes('onli') ||
+            typeLower.includes('video') ||
+            typeLower.includes('tele') ||
+            typeLower.includes('meet')
+          ) {
+            finalType = 'Virtual';
+          }
+        }
+
         records.push({
           id: docSnap.id,
           name: data.name || 'Anonymous',
@@ -194,10 +213,22 @@ export default function DoctorPortal() {
           date: data.date || 'Flexible',
           address: data.address || '',
           comments: data.comments || '',
-          appointmentType: data.appointmentType || 'Physical',
+          appointmentType: finalType,
           createdAt: data.createdAt
         });
       });
+
+      // Sort locally by createdAt desc (newest first) safely handling missing timestamps
+      records.sort((a, b) => {
+        const getMs = (val: any) => {
+          if (!val) return 0;
+          if (typeof val.toDate === 'function') return val.toDate().getTime();
+          if (val.seconds) return val.seconds * 1000;
+          return new Date(val).getTime();
+        };
+        return getMs(b.createdAt) - getMs(a.createdAt);
+      });
+
       setAppointments(records);
     } catch (err: any) {
       console.error("Clinical firestore pull failed: ", err);
@@ -270,17 +301,23 @@ If you have any clinical updates or wish to pre-confirm, please reply to this me
 
   // Filtering records logic for appointments tab (Filtered conditionally per tab selection)
   const filteredAppointments = appointments.filter(a => {
-    const isVirtualTab = activeTab === 'virtual-appointments';
-    const isVirtual = a.appointmentType === 'Virtual';
-    if (isVirtualTab && !isVirtual) return false;
-    if (!isVirtualTab && isVirtual) return false;
+    // If activeTab is 'virtual-appointments', show only Virtual
+    if (activeTab === 'virtual-appointments') {
+      if (a.appointmentType !== 'Virtual') return false;
+    } else {
+      // If activeTab is 'appointments', filter by the type dropdown switcher (defaults to All)
+      if (selectedTypeFilter === 'Physical' && a.appointmentType === 'Virtual') return false;
+      if (selectedTypeFilter === 'Virtual' && a.appointmentType !== 'Virtual') return false;
+    }
 
     const matchesSearch = 
       a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       a.contactNumber.includes(searchQuery) ||
-      a.guardianName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (a.guardianName && a.guardianName.toLowerCase().includes(searchQuery.toLowerCase())) ||
       a.doctor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      a.department.toLowerCase().includes(searchQuery.toLowerCase());
+      a.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (a.comments && a.comments.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (a.address && a.address.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesDept = selectedDeptFilter === 'All' || a.department === selectedDeptFilter;
     const matchesDoctor = selectedDoctorFilter === 'All' || a.doctor === selectedDoctorFilter;
@@ -514,7 +551,10 @@ If you have any clinical updates or wish to pre-confirm, please reply to this me
               {/* SIDE NAVIGATION ITEMS BUTTONS RAIL */}
               <nav className="flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-visible no-scrollbar py-2 lg:py-0 border-b lg:border-none border-white/5" id="sidebar-navigator-rail">
                 <button
-                  onClick={() => setActiveTab2('appointments')}
+                  onClick={() => {
+                    setActiveTab2('appointments');
+                    setSelectedTypeFilter('All');
+                  }}
                   className={`px-4 py-2.5 rounded-xl text-left font-sans font-semibold text-xs tracking-wide flex items-center gap-2.5 transition-all shrink-0 cursor-pointer ${
                     activeTab === 'appointments' 
                       ? 'bg-rose-500/10 text-rose-400 border border-rose-500/2 w-full' 
@@ -523,11 +563,14 @@ If you have any clinical updates or wish to pre-confirm, please reply to this me
                   id="tab-btn-appointments"
                 >
                   <Calendar className="w-4 h-4" />
-                  <span>Physical Consults</span>
+                  <span>All Appointments</span>
                 </button>
 
                 <button
-                  onClick={() => setActiveTab2('virtual-appointments')}
+                  onClick={() => {
+                    setActiveTab2('virtual-appointments');
+                    setSelectedTypeFilter('Virtual');
+                  }}
                   className={`px-4 py-2.5 rounded-xl text-left font-sans font-semibold text-xs tracking-wide flex items-center gap-2.5 transition-all shrink-0 cursor-pointer ${
                     activeTab === 'virtual-appointments' 
                       ? 'bg-rose-500/10 text-rose-400 border border-rose-500/2 w-full' 
@@ -629,12 +672,12 @@ If you have any clinical updates or wish to pre-confirm, please reply to this me
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-4">
                   <div>
                     <h2 className="font-serif text-xl sm:text-2xl font-bold text-white">
-                      {activeTab === 'virtual-appointments' ? 'Virtual Telehealth Consultation Console' : 'Physical Intake Registry Telemetry'}
+                      {activeTab === 'virtual-appointments' ? 'Virtual Telehealth Consultation Console' : 'Clinical Bookings & Consultation Registry'}
                     </h2>
                     <p className="text-slate-400 text-xs font-sans">
                       {activeTab === 'virtual-appointments' 
                         ? 'Manage virtual baby care consults, prenatal online telemetry and remote specialty checks.' 
-                        : 'Patient booking requests saved inside secure Firebase Firestore document collections.'}
+                        : 'Review, manage, and process all physical and virtual patient reservations fetched from secure Firebase Firestore DB.'}
                     </p>
                   </div>
 
@@ -657,10 +700,12 @@ If you have any clinical updates or wish to pre-confirm, please reply to this me
                     </div>
                     <div>
                       <span className="block text-[9px] text-slate-500 uppercase tracking-widest font-extrabold">
-                        {activeTab === 'virtual-appointments' ? 'Virtual Intake' : 'Physical Intake'}
+                        {activeTab === 'virtual-appointments' ? 'Virtual Intake' : 'Total Bookings'}
                       </span>
                       <span className="text-base font-bold font-mono text-white leading-tight">
-                        {appointments.filter(a => activeTab === 'virtual-appointments' ? a.appointmentType === 'Virtual' : (a.appointmentType === 'Physical' || !a.appointmentType)).length}
+                        {activeTab === 'virtual-appointments' 
+                          ? appointments.filter(a => a.appointmentType === 'Virtual').length
+                          : appointments.length}
                       </span>
                     </div>
                   </div>
@@ -704,11 +749,24 @@ If you have any clinical updates or wish to pre-confirm, please reply to this me
                     />
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+                    {activeTab === 'appointments' && (
+                      <select
+                        value={selectedTypeFilter}
+                        onChange={(e) => setSelectedTypeFilter(e.target.value as any)}
+                        className="px-2.5 py-2 rounded-xl bg-slate-950 border border-white/5 text-[11px] font-bold text-rose-450 font-sans outline-none min-h-[38px] cursor-pointer"
+                        id="filter-appointment-type"
+                      >
+                        <option value="All">All Types</option>
+                        <option value="Physical">🏥 Physical Only</option>
+                        <option value="Virtual">💻 Virtual Only</option>
+                      </select>
+                    )}
+
                     <select
                       value={selectedDeptFilter}
                       onChange={(e) => setSelectedDeptFilter(e.target.value)}
-                      className="px-2.5 py-2 rounded-xl bg-slate-950 border border-white/5 text-[11px] font-bold text-slate-300 font-sans outline-none"
+                      className="px-2.5 py-2 rounded-xl bg-slate-950 border border-white/5 text-[11px] font-bold text-slate-300 font-sans outline-none cursor-pointer"
                     >
                       <option value="All">All Departments</option>
                       {uniqueDepartments.slice(1).map(dept => (
@@ -719,7 +777,7 @@ If you have any clinical updates or wish to pre-confirm, please reply to this me
                     <select
                       value={selectedDoctorFilter}
                       onChange={(e) => setSelectedDoctorFilter(e.target.value)}
-                      className="px-2.5 py-2 rounded-xl bg-slate-950 border border-white/5 text-[11px] font-bold text-slate-300 font-sans outline-none"
+                      className="px-2.5 py-2 rounded-xl bg-slate-950 border border-white/5 text-[11px] font-bold text-slate-300 font-sans outline-none cursor-pointer"
                     >
                       <option value="All">All Doctors</option>
                       {uniqueDoctors.slice(1).map(doc => (
