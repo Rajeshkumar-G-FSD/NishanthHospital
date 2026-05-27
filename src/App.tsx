@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import Header from './components/Header';
 import BookingModal from './components/BookingModal';
 import ScrollSequencePlayer from './components/ScrollSequencePlayer';
@@ -71,7 +72,7 @@ const TEAM_MEMBERS: TeamMember[] = [
 export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<string | undefined>(undefined);
-  const [currentView, setCurrentView] = useState<'home' | 'about' | 'why-choose' | 'magizh' | 'contact' | 'doctor'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'about' | 'why-choose' | 'magizh' | 'contact' | 'doctor' | 'doctors'>('home');
 
   const handleOpenModal = (doctor?: any) => {
     setSelectedDoctor(typeof doctor === 'string' ? doctor : undefined);
@@ -106,38 +107,107 @@ export default function App() {
       />
 
       {/* Dynamic View rendering depending on header click tabs */}
-      <main className="w-full grow relative z-10" id="main-content-area">
-        {currentView === 'home' || currentView === 'contact' ? (
-          <>
-            {/* Home view containing the immersive sequence walk and core consultants */}
-            <ScrollSequencePlayer onOpenBooking={handleOpenModal} />
-            
-            <TeamCarousel 
-              members={TEAM_MEMBERS} 
-              title="Meet Our Core Team of Consultants" 
-              titleSize="md"
-              titleColor="rgb(244, 63, 94)"
-              autoPlay={5000}
-              grayscaleEffect={false}
-              className="relative z-20"
-              onBookClick={(doctorName) => handleOpenModal(doctorName)}
-            />
+      <main className="w-full grow relative z-10 animate-fade-in" id="main-content-area">
+        <AnimatePresence mode="wait">
+          {currentView === 'home' || currentView === 'contact' ? (
+            <motion.div
+              key="home"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="w-full flex flex-col"
+            >
+              {/* Home view containing the immersive sequence walk and core consultants */}
+              <ScrollSequencePlayer onOpenBooking={handleOpenModal} />
+              
+              <TeamCarousel 
+                members={TEAM_MEMBERS} 
+                title="Meet Our Core Team of Consultants" 
+                titleSize="md"
+                titleColor="rgb(244, 63, 94)"
+                autoPlay={5000}
+                grayscaleEffect={false}
+                className="relative z-20"
+                onBookClick={(doctorName) => handleOpenModal(doctorName)}
+              />
 
-            <ContactSection />
-          </>
-        ) : currentView === 'about' ? (
-          /* Robust state AboutUs page presenting 25 years of excellence and specialized hospital insights */
-          <AboutView onOpenBooking={handleOpenModal} />
-        ) : currentView === 'why-choose' ? (
-          /* High-impact clinical stats and trust factor insights showing 30,000+ safe deliveries */
-          <WhyChooseView onOpenBooking={handleOpenModal} />
-        ) : currentView === 'magizh' ? (
-          /* Upcoming specialty fertility care block providing hope for aspiring parents */
-          <MagizhView onOpenBooking={handleOpenModal} />
-        ) : (
-          /* Real-time clinician dashboard to view live Firestore appointments list */
-          <DoctorPortal />
-        )}
+              <ContactSection />
+            </motion.div>
+          ) : currentView === 'doctors' ? (
+            <motion.div
+              key="doctors"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="w-full pt-28 pb-16 bg-slate-950 flex flex-col justify-center relative min-h-[85vh]"
+            >
+              {/* Visual background atmospheric elements to match the other pages */}
+              <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-rose-500/5 rounded-full filter blur-3xl pointer-events-none" />
+              <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full filter blur-3xl pointer-events-none" />
+              
+              <TeamCarousel 
+                members={TEAM_MEMBERS} 
+                title="Meet Our Core Team of Consultants" 
+                titleSize="md"
+                titleColor="rgb(244, 63, 94)"
+                autoPlay={5000}
+                grayscaleEffect={false}
+                className="border-none py-0 bg-transparent relative z-10"
+                onBookClick={(doctorName) => handleOpenModal(doctorName)}
+              />
+            </motion.div>
+          ) : currentView === 'about' ? (
+            <motion.div
+              key="about"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="w-full"
+            >
+              {/* Robust state AboutUs page presenting 25 years of excellence and specialized hospital insights */}
+              <AboutView onOpenBooking={handleOpenModal} />
+            </motion.div>
+          ) : currentView === 'why-choose' ? (
+            <motion.div
+              key="why-choose"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="w-full"
+            >
+              {/* High-impact clinical stats and trust factor insights showing 30,000+ safe deliveries */}
+              <WhyChooseView onOpenBooking={handleOpenModal} />
+            </motion.div>
+          ) : currentView === 'magizh' ? (
+            <motion.div
+              key="magizh"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="w-full"
+            >
+              {/* Upcoming specialty fertility care block providing hope for aspiring parents */}
+              <MagizhView onOpenBooking={handleOpenModal} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="doctor-portal"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="w-full"
+            >
+              {/* Real-time clinician dashboard to view live Firestore appointments list */}
+              <DoctorPortal />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Elegant, humble, literal footer */}

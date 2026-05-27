@@ -57,6 +57,51 @@ function AnimatedBio({ text }: AnimatedBioProps) {
   );
 }
 
+function AnimatedTitle({ text, className }: { text: string; className?: string }) {
+  const containerRef = React.useRef<HTMLHeadingElement>(null);
+
+  useGSAP(() => {
+    if (!containerRef.current) return;
+
+    // Reset components & build custom characters/words split wrapper
+    const split = new GSAPSplitText(containerRef.current, {
+      type: 'words,chars',
+      charsClass: 'inline-block opacity-0'
+    });
+
+    // Animate letters using a beautiful staggered lift, rotate and fade-in transition
+    gsap.fromTo(
+      split.chars,
+      {
+        opacity: 0,
+        y: 18,
+        rotateX: -15,
+      },
+      {
+        opacity: 1,
+        y: 0,
+        rotateX: 0,
+        duration: 0.6,
+        stagger: 0.012,
+        ease: 'power3.out',
+      }
+    );
+
+    return () => {
+      split.revert();
+    };
+  }, [text]);
+
+  return (
+    <h2
+      ref={containerRef}
+      className={className}
+    >
+      {text}
+    </h2>
+  );
+}
+
 export interface TeamMember {
   id: string;
   name: string;
@@ -359,16 +404,15 @@ export const TeamCarousel: React.FC<TeamCarouselProps> = ({
       {/* Title */}
       {title && (
         <div className="w-full text-center px-6 mb-12 relative z-10">
-          <h2
+          <AnimatedTitle
+            text={title}
             className={cn(
               "font-serif font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-rose-100 to-amber-200 inline-block relative",
               "text-3xl sm:text-4xl md:text-5xl",
               titleClassName
             )}
-          >
-            {title}
-            <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 rounded-full" />
-          </h2>
+          />
+          <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 rounded-full" />
         </div>
       )}
 

@@ -1,10 +1,30 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Calendar, Shield, Award, Sparkles, HeartHandshake, Baby, Syringe, Layers, Activity } from 'lucide-react';
+import { Calendar, Award, Sparkles, HeartHandshake, Baby, Syringe, Layers, Activity } from 'lucide-react';
 
 interface WhyChooseViewProps {
   onOpenBooking: () => void;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.1,
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { type: 'spring', stiffness: 90, damping: 14 }
+  }
+};
 
 export default function WhyChooseView({ onOpenBooking }: WhyChooseViewProps) {
   const stats = [
@@ -52,10 +72,10 @@ export default function WhyChooseView({ onOpenBooking }: WhyChooseViewProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -15 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      exit={{ opacity: 0, y: -20 }}
       className="w-full min-h-[85vh] bg-slate-950 text-slate-100 pt-28 pb-16 px-4 md:px-8 max-w-7xl mx-auto flex flex-col justify-center relative"
       id="why-choose-us-section"
     >
@@ -71,9 +91,7 @@ export default function WhyChooseView({ onOpenBooking }: WhyChooseViewProps) {
           <div className="space-y-4">
             {/* Tagline Badge */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
+              variants={itemVariants}
               className="inline-flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-xs font-sans font-semibold tracking-wider uppercase"
               id="why-choose-tagline-badge"
             >
@@ -82,7 +100,8 @@ export default function WhyChooseView({ onOpenBooking }: WhyChooseViewProps) {
             </motion.div>
 
             {/* Title / Main Question */}
-            <h1 
+            <motion.h1 
+              variants={itemVariants}
               className="font-serif text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight"
               id="why-choose-heading"
             >
@@ -91,11 +110,12 @@ export default function WhyChooseView({ onOpenBooking }: WhyChooseViewProps) {
                 Trusted Experience
               </span> <br />
               At Your Service
-            </h1>
+            </motion.h1>
           </div>
 
           {/* Highlight Card with 24x7 statement */}
-          <div 
+          <motion.div 
+            variants={itemVariants}
             className="p-5 md:p-6 rounded-2xl bg-slate-900/60 border border-emerald-500/10 hover:border-emerald-500/20 transition-all duration-300 shadow-xl"
             id="highlight-availability-card"
           >
@@ -112,46 +132,54 @@ export default function WhyChooseView({ onOpenBooking }: WhyChooseViewProps) {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          {/* General hospital values */}
-          <div className="space-y-3 font-sans text-sm text-slate-400" id="hospital-assurance-bullets">
-            <div className="flex items-center gap-2.5">
+          {/* General hospital values with animation stagger effect */}
+          <motion.div 
+            variants={itemVariants}
+            className="space-y-3 font-sans text-sm text-slate-400" 
+            id="hospital-assurance-bullets"
+          >
+            <div className="flex items-center gap-2.5 hover:text-white transition-colors duration-250">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
               <span>Fully integrated level III Neonatal ICU facility</span>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 hover:text-white transition-colors duration-250">
               <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
               <span>In-house pediatric & maternity specialists pool</span>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 hover:text-white transition-colors duration-250">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
               <span>Elite sterile surgical chambers & recovery suites</span>
             </div>
-          </div>
+          </motion.div>
 
           {/* Interactive Actions */}
-          <div className="flex flex-col sm:flex-row gap-4 pt-2" id="why-choose-actions">
+          <motion.div 
+            variants={itemVariants}
+            className="flex flex-col sm:flex-row gap-4 pt-2" 
+            id="why-choose-actions"
+          >
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onOpenBooking}
-              className="px-8 py-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-sans font-bold text-sm shadow-xl shadow-emerald-500/15 text-center cursor-pointer transition-all duration-300"
+              className="px-8 py-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-sans font-bold text-sm shadow-xl shadow-emerald-500/15 text-center cursor-pointer transition-all duration-300 shrink-0"
               id="why-choose-cta-booking"
             >
               Consult an Expert
             </motion.button>
             <a
-              href="tel:+919876543210"
-              className="px-8 py-4 rounded-full bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-200 hover:text-white font-sans font-bold text-sm text-center transition-all duration-300 flex items-center justify-center gap-2"
+              href="tel:+919842960060"
+              className="px-8 py-4 rounded-full bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-200 hover:text-white font-sans font-bold text-sm text-center transition-all duration-300 flex items-center justify-center gap-2 hover:border-emerald-500/20"
               id="why-choose-cta-call"
             >
-              <span>Emergency Hotline</span>
+              <span>Emergency Hotline: +91 98429 60060</span>
             </a>
-          </div>
+          </motion.div>
         </div>
 
-        {/* Right Column: Dynamic Bento Stats Grid */}
+        {/* Right Column: Dynamic Bento Stats Grid with springy load effects */}
         <div className="lg:col-span-7" id="why-choose-stats-bento">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {stats.map((stat, idx) => {
@@ -159,18 +187,17 @@ export default function WhyChooseView({ onOpenBooking }: WhyChooseViewProps) {
               return (
                 <motion.div
                   key={stat.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * idx + 0.3 }}
-                  className={`group relative p-6 md:p-8 rounded-2xl bg-gradient-to-br ${stat.color} border border-white/5 hover:bg-slate-900/40 transition-all duration-300 shadow-lg`}
+                  variants={itemVariants}
+                  whileHover={{ y: -6, scale: 1.01 }}
+                  className={`group relative p-6 md:p-8 rounded-2xl bg-gradient-to-br ${stat.color} border border-white/5 hover:border-emerald-500/20 hover:bg-slate-900/40 transition-all duration-300 shadow-lg cursor-default overflow-hidden`}
                   id={stat.id}
                 >
-                  <div className="absolute top-4 right-4 text-white/5 font-mono text-5xl font-black select-none pointer-events-none">
+                  <div className="absolute top-4 right-4 text-white/5 font-mono text-5xl font-black select-none pointer-events-none group-hover:text-white/10 transition-colors duration-500">
                     0{idx + 1}
                   </div>
                   
                   {/* Icon */}
-                  <div className={`w-12 h-12 rounded-xl bg-slate-950 flex items-center justify-center mb-6 border border-white/10 ${stat.iconColor}`}>
+                  <div className={`w-12 h-12 rounded-xl bg-slate-950 flex items-center justify-center mb-6 border border-white/10 ${stat.iconColor} group-hover:scale-105 transition-transform duration-300`}>
                     <IconComp className="w-6 h-6" />
                   </div>
 
@@ -195,20 +222,24 @@ export default function WhyChooseView({ onOpenBooking }: WhyChooseViewProps) {
       </div>
 
       {/* Aesthetic bottom bar highlighting excellence */}
-      <div className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between text-xs sm:text-sm text-slate-400 gap-4 font-sans" id="why-choose-bottom-strip">
-        <span className="flex items-center gap-2">
+      <motion.div 
+        variants={itemVariants}
+        className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between text-xs sm:text-sm text-slate-400 gap-4 font-sans" 
+        id="why-choose-bottom-strip"
+      >
+        <span className="flex items-center gap-2 hover:text-white transition-colors">
           <Award className="w-4 h-4 text-amber-400" />
           <span>Accredited Clinical Quality Practices</span>
         </span>
-        <span className="flex items-center gap-2">
+        <span className="flex items-center gap-2 hover:text-white transition-colors">
           <Calendar className="w-4 h-4 text-rose-400" />
           <span>Trusted across Erode & surrounding regions since 2001</span>
         </span>
-        <span className="flex items-center gap-2">
+        <span className="flex items-center gap-2 hover:text-white transition-colors">
           <Activity className="w-4 h-4 text-emerald-400" />
           <span>Equipped with advanced pediatric ventilation mechanisms</span>
         </span>
-      </div>
+      </motion.div>
 
     </motion.div>
   );

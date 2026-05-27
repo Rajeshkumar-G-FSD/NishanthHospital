@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Heart, Sparkles, Activity } from 'lucide-react';
+import SplitText from './SplitText';
 
 interface ScrollSequencePlayerProps {
   onOpenBooking: () => void;
@@ -101,6 +102,10 @@ export default function ScrollSequencePlayer({ onOpenBooking }: ScrollSequencePl
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Force high-quality premium image smoothing for clean, crisp scales
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     // Secure fallback: find the closest preloaded frame if this index isn't ready
     let img = imageCache.current[frameIndex];
@@ -222,10 +227,10 @@ export default function ScrollSequencePlayer({ onOpenBooking }: ScrollSequencePl
   const progressPercentage = Math.round((loadedCount / TOTAL_FRAMES) * 100);
 
   return (
-    <div ref={containerRef} className="relative w-full h-[150vh] md:h-[320vh] bg-slate-950 flex flex-col items-center pt-24 md:pt-0" id="scroll-sequence-scroller">
+    <div ref={containerRef} className="relative w-full h-[150vh] md:h-[320vh] bg-slate-950 flex flex-col items-center pt-0" id="scroll-sequence-scroller">
       
-      {/* Sticky screen container to host the visual player */}
-      <div className="sticky top-[86px] md:top-0 h-[48vh] sm:h-[60vh] md:h-screen w-[calc(100%-2rem)] md:w-full mx-4 md:mx-0 overflow-hidden flex items-center justify-center bg-slate-900/60 rounded-2xl md:rounded-none border border-white/5 md:border-none shadow-2xl md:shadow-none">
+      {/* Sticky screen container to host the visual player - positioned precisely below the fixed header */}
+      <div className="sticky top-[72px] md:top-[120px] h-[calc(100vh-72px)] md:h-[calc(100vh-120px)] w-full overflow-hidden flex items-center justify-center bg-slate-950">
         
         {/* Cinematic dark overlays to balance content readability */}
         <div className="absolute inset-0 bg-radial-gradient(circle at center, rgba(15,23,42,0.1) 0%, rgba(15,23,42,0.5) 100%) z-10 pointer-events-none" />
@@ -286,16 +291,29 @@ export default function ScrollSequencePlayer({ onOpenBooking }: ScrollSequencePl
               <span>Nishant Hospital Maternity Care</span>
             </motion.div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.2, delay: 0.2, ease: "easeOut" }}
-              className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight drop-shadow-lg leading-tight"
+            <div
               id="hero-centered-title"
+              className="w-full text-center flex flex-col items-center justify-center gap-1 md:gap-3"
             >
-              Expert care meets <br className="sm:hidden" />
-              <span className="bg-gradient-to-r from-rose-400 via-amber-300 to-emerald-400 bg-clip-text text-transparent italic font-medium">affordability</span>
-            </motion.h1>
+              <SplitText
+                text="Expert Care Meets"
+                className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight drop-shadow-xl text-white select-none block"
+                delay={30}
+                duration={1.2}
+                ease="power3.out"
+                splitType="chars"
+                tag="h1"
+              />
+              <SplitText
+                text="Affordability"
+                className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black italic tracking-tight drop-shadow-xl bg-gradient-to-r from-rose-400 via-amber-300 to-emerald-400 bg-clip-text text-transparent select-none block pb-2"
+                delay={40}
+                duration={1.3}
+                ease="power3.out"
+                splitType="chars"
+                tag="h2"
+              />
+            </div>
 
             <motion.div
               initial={{ width: 0, opacity: 0 }}
